@@ -1,11 +1,8 @@
 import pandas as pd
 
-
 def procesar_datos(link_mapa):
 
-    # aquí luego conectas tu lógica real
-    # clientes + polígonos salen del mismo mapa
-
+    # 🔹 SIMULACIÓN (luego conectas scraping Google My Maps)
     data = {
         "COD NUEVO": ["1001", "1002", "1003"],
         "codigo": ["001", "002", "003"],
@@ -15,16 +12,21 @@ def procesar_datos(link_mapa):
 
     df = pd.DataFrame(data)
 
+    # 🔹 métricas reales
+    total_clientes = len(df)
     con_poligono = df[df["poligono"] != ""].shape[0]
     sin_poligono = df[df["poligono"] == ""].shape[0]
 
+    total_poligonos = df["poligono"].nunique()
+
+    # 🔹 export Excel
     archivo = "clientes_actualizados.xlsx"
     df.to_excel(archivo, index=False)
 
-    return archivo, len(df), 2, con_poligono, sin_poligono
-
-    archivo_salida = "clientes_actualizados.xlsx"
-
-    df.to_excel(archivo_salida, index=False)
-
-    return archivo_salida
+    return {
+        "archivo": archivo,
+        "clientes": total_clientes,
+        "poligonos": total_poligonos,
+        "con_poligono": con_poligono,
+        "sin_poligono": sin_poligono
+    }
