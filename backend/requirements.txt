@@ -1,8 +1,8 @@
-flask
-geopandas
+Flask
 pandas
+requests
+openpyxl
+lxml
 shapely
 fastkml
-openpyxl
-requests
-lxml
+gunicorn
