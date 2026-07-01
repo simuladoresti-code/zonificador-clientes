@@ -1,11 +1,64 @@
-<div class="card config-card">
-    <h3>Configuración del mapa</h3>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Zonificador PRO</title>
 
-    <label>Google My Maps</label>
-    <input type="text" id="mapaLink" placeholder="Pegar link Google My Maps">
+<link rel="stylesheet" href="style.css">
 
-    <div class="btn-group">
-        <button onclick="guardarConfig()">Guardar Configuración</button>
-        <button onclick="probarLinks()">Probar Link</button>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>📍 Zonificador Clientes PRO</h1>
+
+    <div class="card">
+        <h2>Actualizar datos</h2>
+
+        <button onclick="descargarExcel()" class="btn">
+            📥 Descargar Excel
+        </button>
+
+        <button onclick="verificar()" class="btn secondary">
+            🔄 Probar conexión
+        </button>
+
+        <p id="status">Esperando acción...</p>
     </div>
+
+    <div class="card">
+        <h2>Vista de datos (Excel → análisis)</h2>
+        <textarea id="dataPreview" placeholder="Aquí se mostrará análisis del Excel..."></textarea>
+    </div>
+
 </div>
+
+<script>
+const API = "https://zonificador-clientes.onrender.com";
+
+function descargarExcel() {
+    window.open(API + "/actualizar", "_blank");
+    document.getElementById("status").innerText = "📥 Descargando Excel...";
+}
+
+async function verificar() {
+    try {
+        const res = await fetch(API + "/actualizar");
+        document.getElementById("status").innerText = "✅ Conectado: " + res.status;
+
+        // Intento de lectura (si es JSON o texto)
+        const text = await res.text();
+
+        document.getElementById("dataPreview").value =
+            "RESPUESTA BRUTA:\n\n" + text.slice(0, 2000);
+
+    } catch (e) {
+        document.getElementById("status").innerText = "❌ Error de conexión";
+    }
+}
+</script>
+
+</body>
+</html>
