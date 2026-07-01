@@ -1,21 +1,22 @@
-async function generar() {
+const API_URL = "https://zonificador-clientes-7.onrender.com";
 
-    const clientes = document.getElementById("clientes").files[0];
-    const poligonos = document.getElementById("poligonos").files[0];
+async function actualizarDatos() {
+    document.getElementById("estado").innerHTML = "Procesando archivos...";
 
-    const formData = new FormData();
-    formData.append("clientes", clientes);
-    formData.append("poligonos", poligonos);
+    const response = await fetch(API_URL + "/actualizar");
+    const data = await response.json();
 
-    const res = await fetch("https://zonificador-clientes.onrender.com/actualizar", {
-        method: "POST",
-        body: formData
-    });
+    if (data.estado === "ok") {
+        document.getElementById("clientes").innerText = data.clientes;
+        document.getElementById("poligonos").innerText = data.poligonos;
 
-    const blob = await res.blob();
+        document.getElementById("estado").innerHTML =
+            "Archivo actualizado correctamente";
 
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "zonificacion.xlsx";
-    a.click();
+        document.getElementById("btnDescargar").style.display = "inline-block";
+    }
+}
+
+function descargarExcel() {
+    window.open(API_URL + "/descargar", "_blank");
 }
