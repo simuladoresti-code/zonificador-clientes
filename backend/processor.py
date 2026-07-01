@@ -3,6 +3,7 @@ import zipfile
 import os
 import pandas as pd
 import xml.etree.ElementTree as ET
+from shapely.geometry import Point, Polygon
 
 MAP_ID = "1KhMBbBH-KMzsH8kuZ_QmLiqJKUclL8E"
 KML_URL = f"https://www.google.com/maps/d/kml?mid={MAP_ID}"
@@ -31,17 +32,21 @@ def buscar_kml():
                 return os.path.join(root, file)
     return None
 
-def extraer_clientes(kml_path):
+def extraer_datos(kml_path):
     tree = ET.parse(kml_path)
     root = tree.getroot()
 
     ns = {"kml": "http://www.opengis.net/kml/2.2"}
 
     clientes = []
+    poligonos = []
 
     for placemark in root.findall(".//kml:Placemark", ns):
+
         nombre = placemark.find("kml:name", ns)
+
         point = placemark.find(".//kml:Point/kml:coordinates", ns)
+        polygon = placemark.find(".//kml:Polygon//kml:coordinates", ns)
 
         if point is not None:
             coords = point.text.strip().split(",")
@@ -49,23 +54,51 @@ def extraer_clientes(kml_path):
             clientes.append({
                 "cliente": nombre.text if nombre is not None else "Sin nombre",
                 "longitud": float(coords[0]),
-                "latitud": float(coords[1]),
-                "zona": "Pendiente"
+                "latitud": float(coords[1])
             })
 
-    return clientes
+        if polygon is not None:
+            coords_text = polygon.text.strip().split()
+
+            coords = []
+            for c in coords_text:
+                parts = c.split(",")
+                coords.append((float(parts[0]), float(parts[1])))
+
+            poligonos.append({
+                "nombre": nombre.text if nombre is not None else "Sin nombre",
+                "poligono": Polygon(coords)
+            })
+
+    return clientes, poligonos
+
+def asignar_zonas(clientes, poligonos):
+    resultado = []
+
+    for cliente in clientes:
+        punto = Point(cliente["longitud"], cliente["latitud"])
+        zona = "Sin zona"
+
+        for p in poligonos:
+            if p["poligono"].contains(punto):
+                zona = p["nombre"]
+                break
+
+        cliente["zona"] = zona
+        resultado.append(cliente)
+
+    return resultado
 
 def procesar_datos():
     limpiar()
     descargar_kml()
     archivo_kml = buscar_kml()
 
-    if not archivo_kml:
-        raise Exception("No se encontró archivo KML")
+    clientes, poligonos = extraer_datos(archivo_kml)
 
-    clientes = extraer_clientes(archivo_kml)
+    resultado = asignar_zonas(clientes, poligonos)
 
-    df = pd.DataFrame(clientes)
+    df = pd.DataFrame(resultado)
 
     archivo_salida = "clientes_actualizados.xlsx"
     df.to_excel(archivo_salida, index=False)
