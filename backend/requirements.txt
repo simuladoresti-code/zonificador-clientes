@@ -1,5 +1,7 @@
-Flask
+flask
 pandas
 openpyxl
-fastkml
+lxml
 shapely
+geopandas
+fastkml
