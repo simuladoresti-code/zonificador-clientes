@@ -3,121 +3,34 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Zonificación PRO Dashboard</title>
+<title>Zonificador PRO</title>
 
 <link rel="stylesheet" href="styles.css">
-
 </head>
 
 <body>
 
-<div class="layout">
+<div class="sidebar">
+    <h2>📍 Zonificador</h2>
 
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-        <h2>📍 Zonificador PRO</h2>
+    <button onclick="actualizar()">🔄 Actualizar</button>
+    <button onclick="descargar()">📥 Descargar Excel</button>
 
-        <nav>
-            <button onclick="showTab('dashboard')">📊 Dashboard</button>
-            <button onclick="showTab('clientes')">👥 Clientes</button>
-            <button onclick="showTab('mapa')">🗺️ Mapa</button>
-            <button onclick="showTab('config')">⚙️ Configuración</button>
-            <button onclick="exportLogs()">📤 Exportar Logs</button>
-        </nav>
+    <input id="mapa" placeholder="Link Google My Maps">
+    <button onclick="guardar()">Guardar Mapa</button>
 
-        <div class="server-status">
-            <p>Servidor:</p>
-            <span id="serverStatus">🟡 Conectando...</span>
-        </div>
-    </aside>
+    <p id="estado">Esperando...</p>
+</div>
 
-    <!-- MAIN -->
-    <main class="main">
+<div class="main">
 
-        <!-- HEADER -->
-        <header class="header">
-            <h1>Dashboard Logístico</h1>
+    <h1>Dashboard</h1>
 
-            <div class="actions">
-                <button class="btn primary" onclick="actualizar()">
-                    🔄 Actualizar
-                </button>
-
-                <button class="btn success" onclick="descargar()">
-                    📥 Descargar Excel
-                </button>
-            </div>
-        </header>
-
-        <!-- KPI CARDS -->
-        <section class="kpis">
-
-            <div class="card">
-                <h3>Total Clientes</h3>
-                <p id="clientes">0</p>
-            </div>
-
-            <div class="card">
-                <h3>Polígonos</h3>
-                <p id="poligonos">0</p>
-            </div>
-
-            <div class="card">
-                <h3>Sin Polígono</h3>
-                <p id="sinPoligono">0</p>
-            </div>
-
-            <div class="card">
-                <h3>Tiempo</h3>
-                <p id="tiempo">0s</p>
-            </div>
-
-        </section>
-
-        <!-- LOADER -->
-        <div id="loader" class="loader hidden">Procesando...</div>
-
-        <!-- LOGS -->
-        <section class="panel">
-            <h2>📜 Actividad</h2>
-            <div id="logs"></div>
-        </section>
-
-        <!-- PREVIEW TABLE -->
-        <section class="panel">
-            <h2>👥 Clientes Preview</h2>
-
-            <input type="text" placeholder="Buscar cliente..." oninput="buscar(this.value)">
-
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Cliente</th>
-                        <th>Polígono</th>
-                        <th>Estado</th>
-                    </tr>
-                </thead>
-                <tbody id="tablaClientes"></tbody>
-            </table>
-        </section>
-
-        <!-- MAP -->
-        <section class="panel">
-            <h2>🗺️ Mapa</h2>
-            <iframe id="mapaFrame"></iframe>
-        </section>
-
-        <!-- CONFIG -->
-        <section class="panel">
-            <h2>⚙️ Configuración</h2>
-
-            <input id="mapaLink" placeholder="Link Google My Maps">
-            <button onclick="guardarConfig()">Guardar</button>
-        </section>
-
-    </main>
+    <div class="cards">
+        <div>Clientes: <span id="c"></span></div>
+        <div>Con Polígono: <span id="cp"></span></div>
+        <div>Sin Polígono: <span id="sp"></span></div>
+    </div>
 
 </div>
 
