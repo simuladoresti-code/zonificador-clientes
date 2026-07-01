@@ -1,29 +1,50 @@
 const API = "https://zonificador-clientes.onrender.com";
 
-async function actualizar() {
-
-    const res = await fetch(API + "/actualizar");
-    const data = await res.json();
-
-    document.getElementById("c").innerText = data.clientes;
-    document.getElementById("cp").innerText = data.con_poligono;
-    document.getElementById("sp").innerText = data.sin_poligono;
-
-    document.getElementById("estado").innerText = "OK";
+function extraerMid(texto) {
+    // acepta link completo o mid directo
+    if (texto.includes("mid=")) {
+        return texto.split("mid=")[1].split("&")[0];
+    }
+    return texto;
 }
 
-function descargar() {
-    window.open(API + "/actualizar", "_blank");
-}
+async function procesar() {
 
-async function guardar() {
-    const mapa = document.getElementById("mapa").value;
+    const input = document.getElementById("mid").value;
+    const mid = extraerMid(input);
 
-    await fetch(API + "/config", {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({mapa})
-    });
+    if (!mid) {
+        alert("Ingresa un MID válido");
+        return;
+    }
 
-    document.getElementById("estado").innerText = "Mapa guardado";
+    document.getElementById("estado").innerText = "Procesando...";
+
+    try {
+        const url = `${API}/actualizar?mid=${mid}`;
+
+        const res = await fetch(url);
+
+        if (!res.ok) {
+            throw new Error("Error en servidor");
+        }
+
+        // 🔥 IMPORTANTE: backend devuelve ARCHIVO, no JSON
+        const blob = await res.blob();
+
+        const downloadUrl = window.URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = downloadUrl;
+        a.download = "zonificacion.xlsx";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        document.getElementById("estado").innerText = "Excel descargado ✔";
+
+    } catch (err) {
+        console.error(err);
+        document.getElementById("estado").innerText = "Error al procesar ❌";
+    }
 }
