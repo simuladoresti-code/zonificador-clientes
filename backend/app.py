@@ -1,119 +1,97 @@
 from flask import Flask, jsonify, request, send_file
-from processor import procesar_datos
-import json
+import pandas as pd
 import os
 
 app = Flask(__name__)
 
-CONFIG_FILE = "config.json"
+# =========================
+# CONFIG
+# =========================
+PORT = int(os.environ.get("PORT", 5000))
 
 
-def leer_config():
-    with open(CONFIG_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-
-def guardar_config(data):
-    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=4)
-
-
+# =========================
+# HOME
+# =========================
 @app.route("/")
 def home():
-    return jsonify({"mensaje": "Servidor activo"})
-
-
-@app.route("/config", methods=["POST"])
-def config():
-    data = request.json
-    guardar_config(data)
-    return jsonify({"mensaje": "Mapa guardado correctamente"})
-
-
-@app.route("/actualizar")
-def actualizar():
-    config = leer_config()
-
-    archivo, clientes, poligonos, con_poligono, sin_poligono = procesar_datos(
-        config["mapa"]
-    )
-
     return jsonify({
-        "estado": "ok",
-        "clientes": clientes,
-        "poligonos": poligonos,
-        "con_poligono": con_poligono,
-        "sin_poligono": sin_poligono
+        "status": "OK",
+        "message": "Zonificador API funcionando 🚀"
     })
 
 
-@app.route("/descargar")
-def descargar():
-    return send_file(
-        "clientes_actualizados.xlsx",
-        as_attachment=True
-    )
-
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)from flask import Flask, jsonify, request, send_file
-from processor import procesar_datos
-import json
-import os
-
-app = Flask(__name__)
-
-CONFIG_FILE = "config.json"
-
-
-def leer_config():
-    with open(CONFIG_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-
-def guardar_config(data):
-    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=4)
-
-
-@app.route("/")
-def home():
-    return jsonify({"mensaje": "Servidor activo"})
-
-
-@app.route("/config", methods=["POST"])
-def config():
-    data = request.json
-    guardar_config(data)
-    return jsonify({"mensaje": "Mapa guardado correctamente"})
-
-
-@app.route("/actualizar")
+# =========================
+# ACTUALIZAR DATOS
+# =========================
+@app.route("/actualizar", methods=["GET"])
 def actualizar():
-    config = leer_config()
 
-    archivo, clientes, poligonos, con_poligono, sin_poligono = procesar_datos(
-        config["mapa"]
-    )
+    # 🔹 AQUÍ luego conectas Google My Maps real
+    data = {
+        "COD NUEVO": ["1001", "1002", "1003"],
+        "codigo": ["001", "002", "003"],
+        "cliente": ["Cliente A", "Cliente B", "Cliente C"],
+        "poligono": ["Zona Norte", "Zona Sur", ""]
+    }
+
+    df = pd.DataFrame(data)
+
+    # 🔹 métricas
+    total_clientes = len(df)
+    con_poligono = df[df["poligono"] != ""].shape[0]
+    sin_poligono = df[df["poligono"] == ""].shape[0]
+    total_poligonos = df["poligono"].nunique()
+
+    # 🔹 generar Excel
+    archivo = "clientes_actualizados.xlsx"
+    df.to_excel(archivo, index=False)
 
     return jsonify({
-        "estado": "ok",
-        "clientes": clientes,
-        "poligonos": poligonos,
+        "clientes": total_clientes,
+        "poligonos": total_poligonos,
         "con_poligono": con_poligono,
-        "sin_poligono": sin_poligono
+        "sin_poligono": sin_poligono,
+        "archivo": archivo
     })
 
 
-@app.route("/descargar")
+# =========================
+# DESCARGAR EXCEL
+# =========================
+@app.route("/descargar", methods=["GET"])
 def descargar():
+
+    archivo = "clientes_actualizados.xlsx"
+
+    if not os.path.exists(archivo):
+        return jsonify({"error": "Archivo no existe"}), 404
+
     return send_file(
-        "clientes_actualizados.xlsx",
-        as_attachment=True
+        archivo,
+        as_attachment=True,
+        download_name="zonificacion_clientes.xlsx"
     )
 
 
+# =========================
+# CONFIG MAPA
+# =========================
+@app.route("/config", methods=["POST"])
+def config():
+
+    data = request.get_json()
+    mapa = data.get("mapa", "")
+
+    # aquí luego lo guardas en DB o archivo
+    return jsonify({
+        "mensaje": "Mapa guardado correctamente",
+        "mapa": mapa
+    })
+
+
+# =========================
+# MAIN (IMPORTANTE PARA RENDER)
+# =========================
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=PORT)
