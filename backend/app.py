@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, send_file
+from flask import Flask, request, send_file, jsonify
 import requests
 import pandas as pd
 from shapely.geometry import Point, Polygon
@@ -7,7 +7,6 @@ from datetime import datetime
 import os
 
 app = Flask(__name__)
-
 PORT = int(os.environ.get("PORT", 5000))
 
 
@@ -25,7 +24,7 @@ def get_kml(mid):
 
 
 # =========================
-# PARSER KML
+# PARSER KML (SIN DEPENDER DE CAPAS)
 # =========================
 def parse_kml(kml_data):
 
@@ -48,6 +47,7 @@ def parse_kml(kml_data):
                 if not geom:
                     continue
 
+                # CLIENTE
                 if geom.geom_type == "Point":
                     clientes.append({
                         "cliente": name,
@@ -55,6 +55,7 @@ def parse_kml(kml_data):
                         "lng": geom.x
                     })
 
+                # POLIGONO
                 elif geom.geom_type == "Polygon":
                     coords = list(geom.exterior.coords)
                     poligonos.append({
@@ -68,9 +69,10 @@ def parse_kml(kml_data):
 
 
 # =========================
-# MATCH
+# MATCH GEO
 # =========================
-def asignar(lat, lng, poligonos):
+def asignar_zona(lat, lng, poligonos):
+
     p = Point(lng, lat)
 
     for z in poligonos:
@@ -81,7 +83,7 @@ def asignar(lat, lng, poligonos):
 
 
 # =========================
-# MAIN
+# ENDPOINT PRINCIPAL
 # =========================
 @app.route("/actualizar", methods=["GET"])
 def actualizar():
@@ -98,21 +100,22 @@ def actualizar():
         # 2. PARSE
         clientes, poligonos = parse_kml(kml_data)
 
+        if len(clientes) == 0:
+            return jsonify({"error": "No hay clientes en el mapa"}), 400
+
         # 3. DF
         df = pd.DataFrame(clientes)
 
-        if df.empty:
-            return jsonify({"error": "No hay clientes en el KML"}), 400
-
         # 4. ZONAS
         df["poligono"] = df.apply(
-            lambda r: asignar(r["lat"], r["lng"], poligonos),
+            lambda r: asignar_zona(r["lat"], r["lng"], poligonos),
             axis=1
         )
 
-        # 5. TEMP FILE (IMPORTANTE EN RENDER)
-        file_path = "/tmp/zonificacion.xlsx"
+        df["fecha"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+        # 5. EXCEL (IMPORTANTE /tmp EN RENDER)
+        file_path = "/tmp/zonificacion.xlsx"
         df.to_excel(file_path, index=False)
 
         return send_file(
