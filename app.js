@@ -1,70 +1,78 @@
-const API_URL = "https://zonificador-clientes-7.onrender.com";
+const API = "https://zonificador-clientes.onrender.com";
 
-function agregarLog(mensaje) {
-    const logs = document.getElementById("logs");
-    const fecha = new Date().toLocaleString();
+function log(msg) {
+    const el = document.getElementById("logs");
+    const time = new Date().toLocaleString();
+    el.innerHTML += `<p>[${time}] ${msg}</p>`;
+}
 
-    logs.innerHTML += `<p>[${fecha}] ${mensaje}</p>`;
+async function actualizar() {
+    document.getElementById("loader").classList.remove("hidden");
+    log("Inicio actualización");
+
+    const start = Date.now();
+
+    const res = await fetch(API + "/actualizar");
+    const data = await res.json();
+
+    const end = Date.now();
+
+    document.getElementById("clientes").innerText = data.clientes;
+    document.getElementById("poligonos").innerText = data.poligonos;
+    document.getElementById("sinPoligono").innerText = data.sin_poligono;
+    document.getElementById("tiempo").innerText = ((end-start)/1000).toFixed(2) + "s";
+
+    document.getElementById("loader").classList.add("hidden");
+
+    log("Actualización completa");
+}
+
+function descargar() {
+    window.open(API + "/descargar", "_blank");
+    log("Descarga Excel");
 }
 
 async function guardarConfig() {
     const mapa = document.getElementById("mapaLink").value;
 
-    const response = await fetch(API_URL + "/config", {
+    await fetch(API + "/config", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            mapa
-        })
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({mapa})
     });
 
-    const data = await response.json();
+    log("Config guardada");
 
-    document.getElementById("estado").innerHTML = data.mensaje;
-    agregarLog("Mapa guardado");
+    const id = mapa.split("mid=")[1].split("&")[0];
+
+    document.getElementById("mapaFrame").src =
+        `https://www.google.com/maps/d/embed?mid=${id}`;
 }
 
-function probarLinks() {
-    const mapa = document.getElementById("mapaLink").value;
+function buscar(valor) {
+    log("Buscando: " + valor);
+}
 
-    if (mapa) {
-        const idMapa = mapa.split("mid=")[1].split("&")[0];
+function showTab(tab) {
+    log("Tab: " + tab);
+}
 
-        document.getElementById("mapFrame").src =
-            `https://www.google.com/maps/d/embed?mid=${idMapa}`;
+function exportLogs() {
+    const text = document.getElementById("logs").innerText;
+    const blob = new Blob([text], {type:"text/plain"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "logs.txt";
+    a.click();
+}
 
-        agregarLog("Vista previa cargada");
+async function checkServer() {
+    try {
+        const r = await fetch(API + "/actualizar");
+        document.getElementById("serverStatus").innerText = "🟢 Online";
+    } catch {
+        document.getElementById("serverStatus").innerText = "🔴 Offline";
     }
 }
 
-async function actualizarDatos() {
-    const inicio = Date.now();
-
-    document.getElementById("estado").innerHTML = "Procesando...";
-    agregarLog("Inicio de actualización");
-
-    const response = await fetch(API_URL + "/actualizar");
-    const data = await response.json();
-
-    const fin = Date.now();
-    const tiempo = ((fin - inicio) / 1000).toFixed(2);
-
-    document.getElementById("clientes").innerText = data.clientes;
-    document.getElementById("poligonos").innerText = data.poligonos;
-    document.getElementById("conPoligono").innerText = data.con_poligono;
-    document.getElementById("sinPoligono").innerText = data.sin_poligono;
-    document.getElementById("fecha").innerText = new Date().toLocaleString();
-    document.getElementById("tiempo").innerText = tiempo + "s";
-
-    document.getElementById("estado").innerHTML = "Actualización completada";
-    document.getElementById("btnDescargar").style.display = "inline-block";
-
-    agregarLog("Proceso completado");
-}
-
-function descargarExcel() {
-    window.open(API_URL + "/descargar", "_blank");
-    agregarLog("Excel descargado");
-}
+checkServer();
