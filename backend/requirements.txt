@@ -1,0 +1,8 @@
+Flask
+pandas
+requests
+openpyxl
+lxml
+shapely
+fastkml
+gunicorn
