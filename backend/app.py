@@ -2,7 +2,6 @@ from flask import Flask, jsonify, request, send_file
 import requests
 import pandas as pd
 from shapely.geometry import Point, Polygon
-from fastkml import kml
 from datetime import datetime
 import os
 
@@ -12,73 +11,88 @@ PORT = int(os.environ.get("PORT", 5000))
 
 
 # =========================
-# 🔥 DESCARGA KML DESDE GOOGLE MY MAPS
+# 🔥 DESCARGAR KML DESDE MY MAPS
 # =========================
-def obtener_kml(mid):
+def get_kml(mid):
     url = f"https://www.google.com/maps/d/kml?mid={mid}"
     r = requests.get(url)
+
+    if r.status_code != 200:
+        raise Exception("No se pudo descargar KML")
+
     return r.content
 
 
 # =========================
-# 🔥 PARSEO KML (CLIENTES + POLÍGONOS)
+# 🔥 PARSER UNIVERSAL (SIN CAPAS)
 # =========================
+from fastkml import kml
+
 def parse_kml(kml_data):
 
     k = kml.KML()
     k.from_string(kml_data)
 
     clientes = []
-    poligonos = {}
+    poligonos = []
 
-    def walk_features(features):
+    def walk(features):
+
         for f in features:
-            name = getattr(f, "name", None)
 
             if hasattr(f, "features"):
-                walk_features(f.features())
+                walk(f.features())
+
             else:
 
-                geom = f.geometry
+                geom = getattr(f, "geometry", None)
+                name = getattr(f, "name", "SIN_NOMBRE")
+
+                if not geom:
+                    continue
 
                 # =====================
-                # POINT = CLIENTE
+                # CLIENTES (POINT)
                 # =====================
-                if geom and geom.geom_type == "Point":
+                if geom.geom_type == "Point":
                     clientes.append({
                         "nombre": name,
-                        "lng": geom.x,
-                        "lat": geom.y
+                        "lat": geom.y,
+                        "lng": geom.x
                     })
 
                 # =====================
-                # POLYGON = ZONA
+                # POLÍGONOS (POLYGON)
                 # =====================
-                if geom and geom.geom_type == "Polygon":
+                elif geom.geom_type == "Polygon":
                     coords = list(geom.exterior.coords)
-                    poly = Polygon(coords)
-                    poligonos[name] = poly
 
-    walk_features(k.features())
+                    poligonos.append({
+                        "nombre": name,
+                        "polygon": Polygon(coords)
+                    })
+
+    walk(k.features())
 
     return clientes, poligonos
 
 
 # =========================
-# 🔥 ASIGNAR ZONA
+# 🔥 ASIGNACIÓN DE ZONA
 # =========================
 def asignar_zona(lat, lng, poligonos):
+
     punto = Point(lng, lat)
 
-    for nombre, poly in poligonos.items():
-        if poly.contains(punto):
-            return nombre
+    for zona in poligonos:
+        if zona["polygon"].contains(punto):
+            return zona["nombre"]
 
     return "SIN ZONA"
 
 
 # =========================
-# 🚀 MAIN: PROCESO COMPLETO
+# 🚀 ENDPOINT PRINCIPAL
 # =========================
 @app.route("/actualizar", methods=["GET"])
 def actualizar():
@@ -86,12 +100,12 @@ def actualizar():
     mid = request.args.get("mid")
 
     if not mid:
-        return jsonify({"error": "Falta mid del mapa"}), 400
+        return jsonify({"error": "Falta MID del mapa"}), 400
 
     # =====================
     # 1. KML
     # =====================
-    kml_data = obtener_kml(mid)
+    kml_data = get_kml(mid)
 
     # =====================
     # 2. PARSE
@@ -112,13 +126,13 @@ def actualizar():
     )
 
     # =====================
-    # 5. KPI
+    # 5. KPIs
     # =====================
     total = len(df)
-    con_zona = df[df["poligono"] != "SIN ZONA"].shape[0]
-    sin_zona = df[df["poligono"] == "SIN ZONA"].shape[0]
+    con = df[df["poligono"] != "SIN ZONA"].shape[0]
+    sin = df[df["poligono"] == "SIN ZONA"].shape[0]
 
-    df["FECHA"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    df["fecha_proceso"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     # =====================
     # 6. EXCEL
@@ -134,7 +148,7 @@ def actualizar():
 
 
 # =========================
-# HEALTH
+# HEALTH CHECK
 # =========================
 @app.route("/")
 def home():
