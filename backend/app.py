@@ -17,30 +17,40 @@ CORS(app)
 def read_kml(file):
 
     data = file.read()
-
     filename = file.filename.lower()
 
-    # KMZ → extraer KML interno
-    if filename.endswith(".kmz"):
+    try:
 
-        try:
+        # -------------------------
+        # KMZ
+        # -------------------------
+        if filename.endswith(".kmz"):
+
             z = zipfile.ZipFile(io.BytesIO(data))
 
+            # buscar TODOS los kml dentro
             kml_files = [f for f in z.namelist() if f.endswith(".kml")]
 
             if not kml_files:
-                raise Exception("KMZ sin KML interno")
+                raise Exception("KMZ no contiene archivos KML")
 
-            return z.read(kml_files[0])
+            # usar el primero (más seguro para MyMaps)
+            kml_data = z.read(kml_files[0])
 
-        except Exception as e:
-            raise Exception(f"Error KMZ: {str(e)}")
+            return kml_data
 
-    return data
+        # -------------------------
+        # KML normal
+        # -------------------------
+        return data
+
+    except Exception as e:
+        print("ERROR KMZ:", str(e))
+        raise Exception(f"Error leyendo archivo: {str(e)}")
 
 
 # =========================
-# CLIENTES (POINT)
+# CLIENTES (POINTS)
 # =========================
 def parse_clientes(kml_data):
 
@@ -50,6 +60,7 @@ def parse_clientes(kml_data):
     clientes = []
 
     def walk(features):
+
         for f in features:
 
             if hasattr(f, "features"):
@@ -57,7 +68,7 @@ def parse_clientes(kml_data):
 
             else:
                 geom = getattr(f, "geometry", None)
-                name = getattr(f, "name", "SIN")
+                name = getattr(f, "name", "SIN NOMBRE")
 
                 if geom and geom.geom_type == "Point":
                     clientes.append({
@@ -71,7 +82,7 @@ def parse_clientes(kml_data):
 
 
 # =========================
-# POLIGONOS
+# POLÍGONOS
 # =========================
 def parse_poligonos(kml_data):
 
@@ -81,6 +92,7 @@ def parse_poligonos(kml_data):
     poligonos = []
 
     def walk(features):
+
         for f in features:
 
             if hasattr(f, "features"):
@@ -91,6 +103,7 @@ def parse_poligonos(kml_data):
                 name = getattr(f, "name", "SIN ZONA")
 
                 if geom and geom.geom_type == "Polygon":
+
                     coords = list(geom.exterior.coords)
 
                     poligonos.append({
@@ -103,15 +116,18 @@ def parse_poligonos(kml_data):
 
 
 # =========================
-# ASIGNAR ZONA
+# ASIGNACIÓN DE ZONA
 # =========================
 def asignar_zona(lat, lng, poligonos):
 
     punto = Point(lng, lat)
 
     for p in poligonos:
-        if p["polygon"].contains(punto):
-            return p["nombre"]
+        try:
+            if p["polygon"].contains(punto):
+                return p["nombre"]
+        except:
+            continue
 
     return "SIN ZONA"
 
@@ -124,24 +140,38 @@ def actualizar():
 
     try:
 
+        print("🚀 INICIO PROCESO")
+
         if "clientes" not in request.files or "poligonos" not in request.files:
             return jsonify({"error": "Faltan archivos"}), 400
 
         clientes_file = request.files["clientes"]
         poligonos_file = request.files["poligonos"]
 
-        print("Clientes:", clientes_file.filename)
-        print("Poligonos:", poligonos_file.filename)
+        print("CLIENTES:", clientes_file.filename)
+        print("POLIGONOS:", poligonos_file.filename)
 
+        # -------------------------
+        # LEER ARCHIVOS
+        # -------------------------
         clientes_kml = read_kml(clientes_file)
         poligonos_kml = read_kml(poligonos_file)
 
+        # -------------------------
+        # PARSE
+        # -------------------------
         clientes = parse_clientes(clientes_kml)
         poligonos = parse_poligonos(poligonos_kml)
 
-        if len(clientes) == 0:
-            return jsonify({"error": "No hay clientes en KML"}), 400
+        print("CLIENTES DETECTADOS:", len(clientes))
+        print("POLIGONOS DETECTADOS:", len(poligonos))
 
+        if len(clientes) == 0:
+            return jsonify({"error": "No se detectaron clientes en el KML"}), 400
+
+        # -------------------------
+        # DATAFRAME
+        # -------------------------
         df = pd.DataFrame(clientes)
 
         df["poligono"] = df.apply(
@@ -149,16 +179,25 @@ def actualizar():
             axis=1
         )
 
-        df["fecha"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        df["fecha_proceso"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+        # -------------------------
+        # EXPORT EXCEL
+        # -------------------------
         path = "/tmp/zonificacion.xlsx"
         df.to_excel(path, index=False)
+
+        print("✅ EXCEL GENERADO")
 
         return send_file(path, as_attachment=True)
 
     except Exception as e:
-        print("ERROR BACKEND:", str(e))
-        return jsonify({"error": str(e)}), 500
+
+        print("❌ ERROR BACKEND:", str(e))
+
+        return jsonify({
+            "error": str(e)
+        }), 500
 
 
 # =========================
@@ -166,8 +205,11 @@ def actualizar():
 # =========================
 @app.route("/")
 def home():
-    return jsonify({"status": "OK"})
+    return jsonify({"status": "OK", "message": "Zonificador activo"})
 
 
+# =========================
+# RUN LOCAL
+# =========================
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)
