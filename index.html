@@ -1,127 +1,16 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<title>Zonificador PRO</title>
-
-<style>
-body{
-    margin:0;
-    font-family:Arial;
-    background:#0f172a;
-    color:white;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
-}
-
-.card{
-    width:380px;
-    background:#1e293b;
-    padding:25px;
-    border-radius:12px;
-}
-
-input{
-    width:100%;
-    margin:8px 0;
-    padding:10px;
-    border-radius:6px;
-    border:none;
-}
-
-button{
-    width:100%;
-    padding:12px;
-    background:#2563eb;
-    border:none;
-    color:white;
-    border-radius:8px;
-    cursor:pointer;
-}
-
-button:hover{
-    background:#1d4ed8;
-}
-
-#estado{
-    margin-top:10px;
-    font-size:13px;
-    color:#cbd5e1;
-}
-</style>
-
-</head>
-
-<body>
-
 <div class="card">
+    <h3>Automatización</h3>
 
-    <h2>📍 Zonificador PRO</h2>
+    <button onclick="actualizarDatos()">Actualizar desde mapa</button>
 
-    <p>Clientes (KML / KMZ)</p>
-    <input type="file" id="clientes">
+    <button id="btnDescargar"
+            onclick="descargarExcel()"
+            style="display:none;">
+        Descargar último Excel
+    </button>
 
-    <p>Polígonos (KML / KMZ)</p>
-    <input type="file" id="poligonos">
-
-    <button onclick="generar()">🚀 Generar Excel</button>
-
-    <p id="estado">Listo</p>
-
+    <p>
+        Cada vez que actualices Google My Maps o subas nuevos KMZ,
+        Render procesará y generará un nuevo archivo automáticamente.
+    </p>
 </div>
-
-<script>
-
-const API = "https://zonificador-clientes.onrender.com";
-
-async function generar(){
-
-    const clientes = document.getElementById("clientes").files[0];
-    const poligonos = document.getElementById("poligonos").files[0];
-
-    if(!clientes || !poligonos){
-        document.getElementById("estado").innerText = "Sube ambos archivos";
-        return;
-    }
-
-    document.getElementById("estado").innerText = "Procesando...";
-
-    const formData = new FormData();
-    formData.append("clientes", clientes);
-    formData.append("poligonos", poligonos);
-
-    try{
-
-        const res = await fetch(API + "/actualizar", {
-            method:"POST",
-            body: formData
-        });
-
-        if(!res.ok){
-            const err = await res.json();
-            document.getElementById("estado").innerText = err.error;
-            return;
-        }
-
-        const blob = await res.blob();
-
-        const url = URL.createObjectURL(blob);
-
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "zonificacion.xlsx";
-        a.click();
-
-        document.getElementById("estado").innerText = "Descargado ✔";
-
-    }catch(e){
-        document.getElementById("estado").innerText = "Error conexión backend";
-    }
-}
-
-</script>
-
-</body>
-</html>
