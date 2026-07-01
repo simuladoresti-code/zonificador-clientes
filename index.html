@@ -2,11 +2,12 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Zonificador KML</title>
+<title>Zonificador PRO</title>
 
 <style>
 body{
-    font-family: Arial;
+    margin:0;
+    font-family:Arial;
     background:#0f172a;
     color:white;
     display:flex;
@@ -16,27 +17,24 @@ body{
 }
 
 .card{
+    width:380px;
     background:#1e293b;
     padding:25px;
     border-radius:12px;
-    width:320px;
-    text-align:center;
 }
 
 input{
     width:100%;
-    margin:10px 0;
+    margin:8px 0;
     padding:10px;
-    background:white;
-    color:black;
     border-radius:6px;
 }
 
 button{
     width:100%;
     padding:12px;
-    border:none;
     background:#2563eb;
+    border:none;
     color:white;
     border-radius:8px;
     cursor:pointer;
@@ -48,7 +46,7 @@ button:hover{
 
 #estado{
     margin-top:10px;
-    font-size:14px;
+    font-size:13px;
 }
 </style>
 
@@ -58,12 +56,12 @@ button:hover{
 
 <div class="card">
 
-    <h2>📍 Zonificador</h2>
+    <h2>📍 Zonificador PRO</h2>
 
-    <p>Clientes KML</p>
+    <p>Clientes (KML o KMZ)</p>
     <input type="file" id="clientes">
 
-    <p>Polígonos KML</p>
+    <p>Polígonos (KML o KMZ)</p>
     <input type="file" id="poligonos">
 
     <button onclick="generar()">🚀 Generar Excel</button>
@@ -73,14 +71,15 @@ button:hover{
 </div>
 
 <script>
+
 const API = "https://zonificador-clientes.onrender.com";
 
-async function generar() {
+async function generar(){
 
     const clientes = document.getElementById("clientes").files[0];
     const poligonos = document.getElementById("poligonos").files[0];
 
-    if (!clientes || !poligonos) {
+    if(!clientes || !poligonos){
         document.getElementById("estado").innerText = "Sube ambos archivos";
         return;
     }
@@ -91,14 +90,14 @@ async function generar() {
     formData.append("clientes", clientes);
     formData.append("poligonos", poligonos);
 
-    try {
+    try{
 
-        const res = await fetch(`${API}/actualizar`, {
-            method: "POST",
+        const res = await fetch(API + "/actualizar", {
+            method:"POST",
             body: formData
         });
 
-        if (!res.ok) {
+        if(!res.ok){
             const err = await res.json();
             document.getElementById("estado").innerText = err.error;
             return;
@@ -106,17 +105,20 @@ async function generar() {
 
         const blob = await res.blob();
 
+        const url = URL.createObjectURL(blob);
+
         const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
+        a.href = url;
         a.download = "zonificacion.xlsx";
         a.click();
 
         document.getElementById("estado").innerText = "Descargado ✔";
 
-    } catch (e) {
+    }catch(e){
         document.getElementById("estado").innerText = "Error conexión";
     }
 }
+
 </script>
 
 </body>
