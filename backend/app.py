@@ -1,5 +1,4 @@
-from flask import Flask, request, send_file, jsonify
-import requests
+from flask import Flask, send_file, jsonify
 import pandas as pd
 from shapely.geometry import Point, Polygon
 from fastkml import kml
@@ -7,24 +6,24 @@ from datetime import datetime
 import os
 
 app = Flask(__name__)
-PORT = int(os.environ.get("PORT", 5000))
+
+KML_PATH = "data/mapa.kml"
 
 
 # =========================
-# DESCARGAR KML
+# LEER KML LOCAL
 # =========================
-def get_kml(mid):
-    url = f"https://www.google.com/maps/d/kml?mid={mid}"
-    r = requests.get(url)
+def load_kml_file():
 
-    if r.status_code != 200:
-        raise Exception("No se pudo descargar KML")
+    if not os.path.exists(KML_PATH):
+        raise Exception("No existe mapa.kml en /data")
 
-    return r.content
+    with open(KML_PATH, "rb") as f:
+        return f.read()
 
 
 # =========================
-# PARSER KML (SIN DEPENDER DE CAPAS)
+# PARSE KML
 # =========================
 def parse_kml(kml_data):
 
@@ -35,19 +34,21 @@ def parse_kml(kml_data):
     poligonos = []
 
     def walk(features):
+
         for f in features:
 
             if hasattr(f, "features"):
                 walk(f.features())
 
             else:
+
                 geom = getattr(f, "geometry", None)
                 name = getattr(f, "name", "SIN")
 
-                if not geom:
+                if geom is None:
                     continue
 
-                # CLIENTE
+                # CLIENTES
                 if geom.geom_type == "Point":
                     clientes.append({
                         "cliente": name,
@@ -55,9 +56,10 @@ def parse_kml(kml_data):
                         "lng": geom.x
                     })
 
-                # POLIGONO
+                # POLIGONOS
                 elif geom.geom_type == "Polygon":
                     coords = list(geom.exterior.coords)
+
                     poligonos.append({
                         "nombre": name,
                         "polygon": Polygon(coords)
@@ -73,40 +75,36 @@ def parse_kml(kml_data):
 # =========================
 def asignar_zona(lat, lng, poligonos):
 
-    p = Point(lng, lat)
+    punto = Point(lng, lat)
 
-    for z in poligonos:
-        if z["polygon"].contains(p):
-            return z["nombre"]
+    for p in poligonos:
+        if p["polygon"].contains(punto):
+            return p["nombre"]
 
     return "SIN ZONA"
 
 
 # =========================
-# ENDPOINT PRINCIPAL
+# ENDPOINT
 # =========================
 @app.route("/actualizar", methods=["GET"])
 def actualizar():
 
     try:
-        mid = request.args.get("mid")
 
-        if not mid:
-            return jsonify({"error": "Falta MID"}), 400
-
-        # 1. KML
-        kml_data = get_kml(mid)
+        # 1. CARGAR KML LOCAL
+        kml_data = load_kml_file()
 
         # 2. PARSE
         clientes, poligonos = parse_kml(kml_data)
 
-        if len(clientes) == 0:
-            return jsonify({"error": "No hay clientes en el mapa"}), 400
+        if not clientes:
+            return jsonify({"error": "No hay clientes en el KML"}), 400
 
-        # 3. DF
+        # 3. DATAFRAME
         df = pd.DataFrame(clientes)
 
-        # 4. ZONAS
+        # 4. CRUCE
         df["poligono"] = df.apply(
             lambda r: asignar_zona(r["lat"], r["lng"], poligonos),
             axis=1
@@ -114,7 +112,7 @@ def actualizar():
 
         df["fecha"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        # 5. EXCEL (IMPORTANTE /tmp EN RENDER)
+        # 5. EXCEL
         file_path = "/tmp/zonificacion.xlsx"
         df.to_excel(file_path, index=False)
 
@@ -134,4 +132,4 @@ def home():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=PORT)
+    app.run(host="0.0.0.0", port=5000)
