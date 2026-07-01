@@ -2,65 +2,126 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Zonificador PRO</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link rel="stylesheet" href="style.css">
+<title>Zonificación PRO Dashboard</title>
+
+<link rel="stylesheet" href="styles.css">
 
 </head>
 
 <body>
 
-<div class="container">
+<div class="layout">
 
-    <h1>📍 Zonificador Clientes PRO</h1>
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <h2>📍 Zonificador PRO</h2>
 
-    <div class="card">
-        <h2>Actualizar datos</h2>
+        <nav>
+            <button onclick="showTab('dashboard')">📊 Dashboard</button>
+            <button onclick="showTab('clientes')">👥 Clientes</button>
+            <button onclick="showTab('mapa')">🗺️ Mapa</button>
+            <button onclick="showTab('config')">⚙️ Configuración</button>
+            <button onclick="exportLogs()">📤 Exportar Logs</button>
+        </nav>
 
-        <button onclick="descargarExcel()" class="btn">
-            📥 Descargar Excel
-        </button>
+        <div class="server-status">
+            <p>Servidor:</p>
+            <span id="serverStatus">🟡 Conectando...</span>
+        </div>
+    </aside>
 
-        <button onclick="verificar()" class="btn secondary">
-            🔄 Probar conexión
-        </button>
+    <!-- MAIN -->
+    <main class="main">
 
-        <p id="status">Esperando acción...</p>
-    </div>
+        <!-- HEADER -->
+        <header class="header">
+            <h1>Dashboard Logístico</h1>
 
-    <div class="card">
-        <h2>Vista de datos (Excel → análisis)</h2>
-        <textarea id="dataPreview" placeholder="Aquí se mostrará análisis del Excel..."></textarea>
-    </div>
+            <div class="actions">
+                <button class="btn primary" onclick="actualizar()">
+                    🔄 Actualizar
+                </button>
+
+                <button class="btn success" onclick="descargar()">
+                    📥 Descargar Excel
+                </button>
+            </div>
+        </header>
+
+        <!-- KPI CARDS -->
+        <section class="kpis">
+
+            <div class="card">
+                <h3>Total Clientes</h3>
+                <p id="clientes">0</p>
+            </div>
+
+            <div class="card">
+                <h3>Polígonos</h3>
+                <p id="poligonos">0</p>
+            </div>
+
+            <div class="card">
+                <h3>Sin Polígono</h3>
+                <p id="sinPoligono">0</p>
+            </div>
+
+            <div class="card">
+                <h3>Tiempo</h3>
+                <p id="tiempo">0s</p>
+            </div>
+
+        </section>
+
+        <!-- LOADER -->
+        <div id="loader" class="loader hidden">Procesando...</div>
+
+        <!-- LOGS -->
+        <section class="panel">
+            <h2>📜 Actividad</h2>
+            <div id="logs"></div>
+        </section>
+
+        <!-- PREVIEW TABLE -->
+        <section class="panel">
+            <h2>👥 Clientes Preview</h2>
+
+            <input type="text" placeholder="Buscar cliente..." oninput="buscar(this.value)">
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Cliente</th>
+                        <th>Polígono</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaClientes"></tbody>
+            </table>
+        </section>
+
+        <!-- MAP -->
+        <section class="panel">
+            <h2>🗺️ Mapa</h2>
+            <iframe id="mapaFrame"></iframe>
+        </section>
+
+        <!-- CONFIG -->
+        <section class="panel">
+            <h2>⚙️ Configuración</h2>
+
+            <input id="mapaLink" placeholder="Link Google My Maps">
+            <button onclick="guardarConfig()">Guardar</button>
+        </section>
+
+    </main>
 
 </div>
 
-<script>
-const API = "https://zonificador-clientes.onrender.com";
+<script src="app.js"></script>
 
-function descargarExcel() {
-    window.open(API + "/actualizar", "_blank");
-    document.getElementById("status").innerText = "📥 Descargando Excel...";
-}
-
-async function verificar() {
-    try {
-        const res = await fetch(API + "/actualizar");
-        document.getElementById("status").innerText = "✅ Conectado: " + res.status;
-
-        // Intento de lectura (si es JSON o texto)
-        const text = await res.text();
-
-        document.getElementById("dataPreview").value =
-            "RESPUESTA BRUTA:\n\n" + text.slice(0, 2000);
-
-    } catch (e) {
-        document.getElementById("status").innerText = "❌ Error de conexión";
-    }
-}
-</script>
-
-</body>
-</html>
 </body>
 </html>
