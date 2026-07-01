@@ -1,16 +1,92 @@
-<div class="card">
-    <h3>Automatización</h3>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zonificador PRO</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
 
-    <button onclick="actualizarDatos()">Actualizar desde mapa</button>
+<div class="sidebar">
+    <div class="logo">
+        <h2>Zonificador PRO</h2>
+        <p>Automatización de clientes y polígonos</p>
+    </div>
 
-    <button id="btnDescargar"
-            onclick="descargarExcel()"
-            style="display:none;">
-        Descargar último Excel
-    </button>
-
-    <p>
-        Cada vez que actualices Google My Maps o subas nuevos KMZ,
-        Render procesará y generará un nuevo archivo automáticamente.
-    </p>
+    <div class="menu">
+        <p>Dashboard</p>
+        <p>Subidas</p>
+        <p>Historial</p>
+        <p>Descargas</p>
+    </div>
 </div>
+
+<div class="main">
+
+    <div class="header">
+        <div>
+            <h1>Dashboard Operativo</h1>
+            <span class="status">● Servidor Activo</span>
+        </div>
+    </div>
+
+    <div class="cards">
+
+        <div class="card">
+            <h3>Total Clientes</h3>
+            <p id="clientes">0</p>
+        </div>
+
+        <div class="card">
+            <h3>Total Polígonos</h3>
+            <p id="poligonos">0</p>
+        </div>
+
+        <div class="card">
+            <h3>Última actualización</h3>
+            <p id="fecha">Sin ejecutar</p>
+        </div>
+
+        <div class="card">
+            <h3>Tiempo de proceso</h3>
+            <p id="tiempo">0s</p>
+        </div>
+
+    </div>
+
+    <div class="card">
+        <h3>Subir archivos KMZ</h3>
+
+        <label>Clientes</label>
+        <input type="file" id="clientesFile" accept=".kmz">
+
+        <label>Polígonos</label>
+        <input type="file" id="poligonosFile" accept=".kmz">
+
+        <div class="btn-group">
+            <button onclick="subirArchivos()">Subir Archivos</button>
+            <button onclick="actualizarDatos()">Procesar Datos</button>
+            <button id="btnDescargar"
+                    onclick="descargarExcel()"
+                    style="display:none;">
+                Descargar Excel
+            </button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>Historial</h3>
+        <div id="logs"></div>
+    </div>
+
+    <div class="card">
+        <h3>Estado</h3>
+        <div id="estado"></div>
+    </div>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
