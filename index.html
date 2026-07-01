@@ -1,92 +1,117 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zonificador PRO</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
+const API_URL = "https://zonificador-clientes-7.onrender.com";
 
-<div class="sidebar">
-    <div class="logo">
-        <h2>Zonificador PRO</h2>
-        <p>Automatización de clientes y polígonos</p>
-    </div>
+function agregarLog(mensaje) {
+    const logs = document.getElementById("logs");
+    const fecha = new Date().toLocaleString();
 
-    <div class="menu">
-        <p>Dashboard</p>
-        <p>Subidas</p>
-        <p>Historial</p>
-        <p>Descargas</p>
-    </div>
-</div>
+    logs.innerHTML += `
+        <p>[${fecha}] ${mensaje}</p>
+    `;
+}
 
-<div class="main">
+async function subirArchivos() {
+    console.log("Entró a subir");
 
-    <div class="header">
-        <div>
-            <h1>Dashboard Operativo</h1>
-            <span class="status">● Servidor Activo</span>
-        </div>
-    </div>
+    const clientes =
+        document.getElementById("clientesFile").files[0];
 
-    <div class="cards">
+    const poligonos =
+        document.getElementById("poligonosFile").files[0];
 
-        <div class="card">
-            <h3>Total Clientes</h3>
-            <p id="clientes">0</p>
-        </div>
+    if (!clientes || !poligonos) {
+        alert("Selecciona ambos archivos KMZ");
+        return;
+    }
 
-        <div class="card">
-            <h3>Total Polígonos</h3>
-            <p id="poligonos">0</p>
-        </div>
+    console.log("Clientes:", clientes.name);
+    console.log("Polígonos:", poligonos.name);
 
-        <div class="card">
-            <h3>Última actualización</h3>
-            <p id="fecha">Sin ejecutar</p>
-        </div>
+    const formData = new FormData();
+    formData.append("clientes", clientes);
+    formData.append("poligonos", poligonos);
 
-        <div class="card">
-            <h3>Tiempo de proceso</h3>
-            <p id="tiempo">0s</p>
-        </div>
+    document.getElementById("estado").innerHTML =
+        "Subiendo archivos...";
 
-    </div>
+    try {
+        const response = await fetch(API_URL + "/subir", {
+            method: "POST",
+            body: formData
+        });
 
-    <div class="card">
-        <h3>Subir archivos KMZ</h3>
+        const data = await response.json();
 
-        <label>Clientes</label>
-        <input type="file" id="clientesFile" accept=".kmz">
+        console.log(data);
 
-        <label>Polígonos</label>
-        <input type="file" id="poligonosFile" accept=".kmz">
+        document.getElementById("estado").innerHTML =
+            data.mensaje;
 
-        <div class="btn-group">
-            <button onclick="subirArchivos()">Subir Archivos</button>
-            <button onclick="actualizarDatos()">Procesar Datos</button>
-            <button id="btnDescargar"
-                    onclick="descargarExcel()"
-                    style="display:none;">
-                Descargar Excel
-            </button>
-        </div>
-    </div>
+        agregarLog("Archivos subidos correctamente");
 
-    <div class="card">
-        <h3>Historial</h3>
-        <div id="logs"></div>
-    </div>
+    } catch (error) {
+        console.error(error);
 
-    <div class="card">
-        <h3>Estado</h3>
-        <div id="estado"></div>
-    </div>
+        document.getElementById("estado").innerHTML =
+            "Error al subir archivos";
 
-</div>
+        agregarLog("Error en subida");
+    }
+}
 
-<script src="app.js"></script>
-</body>
-</html>
+async function actualizarDatos() {
+    console.log("Procesando datos...");
+
+    const inicio = Date.now();
+
+    document.getElementById("estado").innerHTML =
+        "Procesando archivos...";
+
+    agregarLog("Inicio de procesamiento");
+
+    try {
+        const response = await fetch(API_URL + "/actualizar");
+
+        const data = await response.json();
+
+        console.log(data);
+
+        const fin = Date.now();
+        const tiempo = ((fin - inicio) / 1000).toFixed(2);
+
+        document.getElementById("clientes").innerText =
+            data.clientes;
+
+        document.getElementById("poligonos").innerText =
+            data.poligonos;
+
+        document.getElementById("fecha").innerText =
+            new Date().toLocaleString();
+
+        document.getElementById("tiempo").innerText =
+            tiempo + "s";
+
+        document.getElementById("estado").innerHTML =
+            "Procesamiento completado";
+
+        document.getElementById("btnDescargar").style.display =
+            "inline-block";
+
+        agregarLog("Procesamiento finalizado");
+
+    } catch (error) {
+        console.error(error);
+
+        document.getElementById("estado").innerHTML =
+            "Error al procesar";
+
+        agregarLog("Error en procesamiento");
+    }
+}
+
+function descargarExcel() {
+    console.log("Descargando Excel");
+
+    window.open(API_URL + "/descargar", "_blank");
+
+    agregarLog("Excel descargado");
+}
