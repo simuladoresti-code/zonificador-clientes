@@ -1,8 +1,8 @@
 Flask
+flask-cors
 pandas
-requests
 openpyxl
-lxml
-shapely
+requests
 fastkml
+shapely
 gunicorn
