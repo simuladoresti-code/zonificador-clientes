@@ -3,15 +3,34 @@ from flask_cors import CORS
 import pandas as pd
 from shapely.geometry import Point, Polygon
 from fastkml import kml
+import zipfile
+import io
 from datetime import datetime
 
 app = Flask(__name__)
 CORS(app)
 
 
-# ------------------------
-# PARSE KML CLIENTES
-# ------------------------
+# =========================
+# LEER KML / KMZ
+# =========================
+def read_kml(file):
+
+    filename = file.filename
+    data = file.read()
+
+    # KMZ → extraer KML
+    if filename.endswith(".kmz"):
+        z = zipfile.ZipFile(io.BytesIO(data))
+        kml_file = [f for f in z.namelist() if f.endswith(".kml")][0]
+        return z.read(kml_file)
+
+    return data
+
+
+# =========================
+# PARSE CLIENTES
+# =========================
 def parse_clientes(kml_data):
 
     k = kml.KML()
@@ -40,9 +59,9 @@ def parse_clientes(kml_data):
     return clientes
 
 
-# ------------------------
+# =========================
 # PARSE POLIGONOS
-# ------------------------
+# =========================
 def parse_poligonos(kml_data):
 
     k = kml.KML()
@@ -58,7 +77,7 @@ def parse_poligonos(kml_data):
 
             else:
                 geom = getattr(f, "geometry", None)
-                name = getattr(f, "name", "SIN")
+                name = getattr(f, "name", "SIN ZONA")
 
                 if geom and geom.geom_type == "Polygon":
                     coords = list(geom.exterior.coords)
@@ -72,9 +91,9 @@ def parse_poligonos(kml_data):
     return poligonos
 
 
-# ------------------------
+# =========================
 # ASIGNAR ZONA
-# ------------------------
+# =========================
 def asignar(lat, lng, poligonos):
 
     punto = Point(lng, lat)
@@ -86,19 +105,28 @@ def asignar(lat, lng, poligonos):
     return "SIN ZONA"
 
 
-# ------------------------
-# ENDPOINT
-# ------------------------
+# =========================
+# ENDPOINT PRINCIPAL
+# =========================
 @app.route("/actualizar", methods=["POST"])
 def actualizar():
 
     try:
 
+        if "clientes" not in request.files or "poligonos" not in request.files:
+            return jsonify({"error": "Faltan archivos KML/KMZ"}), 400
+
         clientes_file = request.files["clientes"]
         poligonos_file = request.files["poligonos"]
 
-        clientes = parse_clientes(clientes_file.read())
-        poligonos = parse_poligonos(poligonos_file.read())
+        clientes_kml = read_kml(clientes_file)
+        poligonos_kml = read_kml(poligonos_file)
+
+        clientes = parse_clientes(clientes_kml)
+        poligonos = parse_poligonos(poligonos_kml)
+
+        if len(clientes) == 0:
+            return jsonify({"error": "No se detectaron clientes"}), 400
 
         df = pd.DataFrame(clientes)
 
@@ -118,6 +146,9 @@ def actualizar():
         return jsonify({"error": str(e)}), 500
 
 
+# =========================
+# HEALTH CHECK
+# =========================
 @app.route("/")
 def home():
     return jsonify({"status": "OK"})
