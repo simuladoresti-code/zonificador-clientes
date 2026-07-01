@@ -2,29 +2,21 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Zonificador PRO</title>
-
 <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
 
-<div class="container">
+<div class="box">
 
     <h1>📍 Zonificador PRO</h1>
 
-    <div class="card">
+    <input id="mid" placeholder="Pega MID o link de My Maps">
 
-        <label>Link o MID del Google My Maps</label>
+    <button onclick="generar()">🚀 Generar Excel</button>
 
-        <input id="mid" placeholder="Ej: 1KhMBbBH-KMzsH8kuZ_QmLiqJKUclL8E">
-
-        <button onclick="procesar()">🚀 Generar Excel</button>
-
-        <p id="estado">Esperando...</p>
-
-    </div>
+    <p id="estado">Esperando...</p>
 
 </div>
 
