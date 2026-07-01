@@ -12,24 +12,35 @@ CORS(app)
 
 
 # =========================
-# LEER KML / KMZ
+# LEER KML / KMZ (ROBUSTO)
 # =========================
 def read_kml(file):
 
-    filename = file.filename
     data = file.read()
 
-    # KMZ → extraer KML
+    filename = file.filename.lower()
+
+    # KMZ → extraer KML interno
     if filename.endswith(".kmz"):
-        z = zipfile.ZipFile(io.BytesIO(data))
-        kml_file = [f for f in z.namelist() if f.endswith(".kml")][0]
-        return z.read(kml_file)
+
+        try:
+            z = zipfile.ZipFile(io.BytesIO(data))
+
+            kml_files = [f for f in z.namelist() if f.endswith(".kml")]
+
+            if not kml_files:
+                raise Exception("KMZ sin KML interno")
+
+            return z.read(kml_files[0])
+
+        except Exception as e:
+            raise Exception(f"Error KMZ: {str(e)}")
 
     return data
 
 
 # =========================
-# PARSE CLIENTES
+# CLIENTES (POINT)
 # =========================
 def parse_clientes(kml_data):
 
@@ -60,7 +71,7 @@ def parse_clientes(kml_data):
 
 
 # =========================
-# PARSE POLIGONOS
+# POLIGONOS
 # =========================
 def parse_poligonos(kml_data):
 
@@ -94,7 +105,7 @@ def parse_poligonos(kml_data):
 # =========================
 # ASIGNAR ZONA
 # =========================
-def asignar(lat, lng, poligonos):
+def asignar_zona(lat, lng, poligonos):
 
     punto = Point(lng, lat)
 
@@ -114,10 +125,13 @@ def actualizar():
     try:
 
         if "clientes" not in request.files or "poligonos" not in request.files:
-            return jsonify({"error": "Faltan archivos KML/KMZ"}), 400
+            return jsonify({"error": "Faltan archivos"}), 400
 
         clientes_file = request.files["clientes"]
         poligonos_file = request.files["poligonos"]
+
+        print("Clientes:", clientes_file.filename)
+        print("Poligonos:", poligonos_file.filename)
 
         clientes_kml = read_kml(clientes_file)
         poligonos_kml = read_kml(poligonos_file)
@@ -126,12 +140,12 @@ def actualizar():
         poligonos = parse_poligonos(poligonos_kml)
 
         if len(clientes) == 0:
-            return jsonify({"error": "No se detectaron clientes"}), 400
+            return jsonify({"error": "No hay clientes en KML"}), 400
 
         df = pd.DataFrame(clientes)
 
         df["poligono"] = df.apply(
-            lambda r: asignar(r["lat"], r["lng"], poligonos),
+            lambda r: asignar_zona(r["lat"], r["lng"], poligonos),
             axis=1
         )
 
@@ -143,6 +157,7 @@ def actualizar():
         return send_file(path, as_attachment=True)
 
     except Exception as e:
+        print("ERROR BACKEND:", str(e))
         return jsonify({"error": str(e)}), 500
 
 
