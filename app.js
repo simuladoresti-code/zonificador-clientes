@@ -1,7 +1,5 @@
 const API_URL = "https://zonificador-clientes-7.onrender.com";
 
-let totalDescargas = 0;
-
 function agregarLog(mensaje) {
     const logs = document.getElementById("logs");
     const fecha = new Date().toLocaleString();
@@ -10,8 +8,7 @@ function agregarLog(mensaje) {
 }
 
 async function guardarConfig() {
-    const clientes = document.getElementById("clientesLink").value;
-    const poligonos = document.getElementById("poligonosLink").value;
+    const mapa = document.getElementById("mapaLink").value;
 
     const response = await fetch(API_URL + "/config", {
         method: "POST",
@@ -19,22 +16,25 @@ async function guardarConfig() {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({
-            clientes,
-            poligonos
+            mapa
         })
     });
 
     const data = await response.json();
 
     document.getElementById("estado").innerHTML = data.mensaje;
-    agregarLog("Configuración guardada");
+    agregarLog("Mapa guardado");
 }
 
 function probarLinks() {
-    const clientes = document.getElementById("clientesLink").value;
+    const mapa = document.getElementById("mapaLink").value;
 
-    if (clientes) {
-        document.getElementById("mapFrame").src = clientes;
+    if (mapa) {
+        const idMapa = mapa.split("mid=")[1].split("&")[0];
+
+        document.getElementById("mapFrame").src =
+            `https://www.google.com/maps/d/embed?mid=${idMapa}`;
+
         agregarLog("Vista previa cargada");
     }
 }
@@ -61,12 +61,10 @@ async function actualizarDatos() {
     document.getElementById("estado").innerHTML = "Actualización completada";
     document.getElementById("btnDescargar").style.display = "inline-block";
 
-    agregarLog("Actualización completada");
+    agregarLog("Proceso completado");
 }
 
 function descargarExcel() {
     window.open(API_URL + "/descargar", "_blank");
-    totalDescargas++;
-
     agregarLog("Excel descargado");
 }
