@@ -1,0 +1,8 @@
+flask
+geopandas
+pandas
+shapely
+fastkml
+openpyxl
+requests
+lxml
