@@ -10,26 +10,20 @@
 
 <body>
 
-<div class="sidebar">
-    <h2>📍 Zonificador</h2>
+<div class="container">
 
-    <button onclick="actualizar()">🔄 Actualizar</button>
-    <button onclick="descargar()">📥 Descargar Excel</button>
+    <h1>📍 Zonificador PRO</h1>
 
-    <input id="mapa" placeholder="Link Google My Maps">
-    <button onclick="guardar()">Guardar Mapa</button>
+    <div class="card">
 
-    <p id="estado">Esperando...</p>
-</div>
+        <label>Link o MID del Google My Maps</label>
 
-<div class="main">
+        <input id="mid" placeholder="Ej: 1KhMBbBH-KMzsH8kuZ_QmLiqJKUclL8E">
 
-    <h1>Dashboard</h1>
+        <button onclick="procesar()">🚀 Generar Excel</button>
 
-    <div class="cards">
-        <div>Clientes: <span id="c"></span></div>
-        <div>Con Polígono: <span id="cp"></span></div>
-        <div>Sin Polígono: <span id="sp"></span></div>
+        <p id="estado">Esperando...</p>
+
     </div>
 
 </div>
