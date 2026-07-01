@@ -28,6 +28,7 @@ input{
     margin:8px 0;
     padding:10px;
     border-radius:6px;
+    border:none;
 }
 
 button{
@@ -47,6 +48,7 @@ button:hover{
 #estado{
     margin-top:10px;
     font-size:13px;
+    color:#cbd5e1;
 }
 </style>
 
@@ -58,10 +60,10 @@ button:hover{
 
     <h2>📍 Zonificador PRO</h2>
 
-    <p>Clientes (KML o KMZ)</p>
+    <p>Clientes (KML / KMZ)</p>
     <input type="file" id="clientes">
 
-    <p>Polígonos (KML o KMZ)</p>
+    <p>Polígonos (KML / KMZ)</p>
     <input type="file" id="poligonos">
 
     <button onclick="generar()">🚀 Generar Excel</button>
@@ -115,7 +117,7 @@ async function generar(){
         document.getElementById("estado").innerText = "Descargado ✔";
 
     }catch(e){
-        document.getElementById("estado").innerText = "Error conexión";
+        document.getElementById("estado").innerText = "Error conexión backend";
     }
 }
 
