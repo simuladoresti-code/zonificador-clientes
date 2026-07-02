@@ -1,8 +1,22 @@
 from flask import Flask, jsonify, request, send_file
+from flask_cors import CORS
 from processor import procesar_datos
 import os
 
 app = Flask(__name__)
+
+# Configurar CORS para permitir solicitudes desde GitHub Pages y otros orígenes
+CORS(app, resources={
+    r"/*": {
+        "origins": [
+            "https://simuladoresti-code.github.io",
+            "http://localhost:*",
+            "http://127.0.0.1:*"
+        ],
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type"]
+    }
+})
 
 
 @app.route("/")
@@ -10,7 +24,7 @@ def home():
     return jsonify({"mensaje": "Servidor activo"})
 
 
-@app.route("/subir", methods=["POST"])
+@app.route("/subir", methods=["POST", "OPTIONS"])
 def subir():
 
     clientes = request.files["clientes"]
@@ -24,7 +38,7 @@ def subir():
     })
 
 
-@app.route("/actualizar")
+@app.route("/actualizar", methods=["GET", "OPTIONS"])
 def actualizar():
 
     archivo, total_clientes, total_poligonos = procesar_datos(
@@ -39,7 +53,7 @@ def actualizar():
     })
 
 
-@app.route("/descargar")
+@app.route("/descargar", methods=["GET", "OPTIONS"])
 def descargar():
     return send_file(
         "clientes_actualizados.xlsx",
