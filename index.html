@@ -3,121 +3,247 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zonificador PRO</title>
+    <title>Zonificador PRO - Dashboard de Automatización</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="logo">
-            <h2>Zonificador PRO</h2>
-            <p>Automatización de clientes y polígonos</p>
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="logo-container">
+            <div class="logo-icon">
+                <i class="fas fa-map"></i>
+            </div>
+            <div class="logo-text">
+                <h1>Zonificador</h1>
+                <p class="logo-subtitle">PRO v1.0</p>
+            </div>
         </div>
 
-        <div class="menu">
-            <p>Dashboard</p>
-            <p>Subidas</p>
-            <p>Procesos</p>
-            <p>Descargas</p>
-            <p>Historial</p>
+        <nav class="menu">
+            <div class="menu-section">
+                <p class="menu-label">PRINCIPAL</p>
+                <a href="#" class="menu-item active" data-section="dashboard">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="menu-item" data-section="upload">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <span>Subidas</span>
+                </a>
+                <a href="#" class="menu-item" data-section="process">
+                    <i class="fas fa-cog"></i>
+                    <span>Procesos</span>
+                </a>
+                <a href="#" class="menu-item" data-section="download">
+                    <i class="fas fa-download"></i>
+                    <span>Descargas</span>
+                </a>
+            </div>
+
+            <div class="menu-section">
+                <p class="menu-label">MONITOREO</p>
+                <a href="#" class="menu-item" data-section="history">
+                    <i class="fas fa-history"></i>
+                    <span>Historial</span>
+                </a>
+                <a href="#" class="menu-item" data-section="stats">
+                    <i class="fas fa-bar-chart"></i>
+                    <span>Estadísticas</span>
+                </a>
+            </div>
+        </nav>
+
+        <div class="server-status">
+            <div class="status-indicator active"></div>
+            <div class="status-text">
+                <p class="status-label">Estado del Servidor</p>
+                <p class="status-value">● Activo</p>
+            </div>
         </div>
-    </div>
+    </aside>
 
-    <!-- Main -->
-    <div class="main">
-
+    <!-- Main Content -->
+    <main class="main-content">
         <!-- Header -->
-        <div class="header">
-            <h1>Dashboard Operativo</h1>
-            <span class="status">● Servidor Activo</span>
-        </div>
-
-        <!-- KPI Cards -->
-        <div class="cards">
-
-            <div class="card">
-                <h3>Total Clientes</h3>
-                <p id="clientes">0</p>
+        <header class="header">
+            <div class="header-left">
+                <h1 class="page-title">Dashboard Operativo</h1>
+                <p class="page-subtitle">Gestión de clientes y zonificación geográfica</p>
             </div>
-
-            <div class="card">
-                <h3>Total Polígonos</h3>
-                <p id="poligonos">0</p>
+            <div class="header-right">
+                <div class="header-info">
+                    <i class="fas fa-info-circle"></i>
+                    <span id="last-sync">Última sincronización: Nunca</span>
+                </div>
             </div>
+        </header>
 
-            <div class="card">
-                <h3>Última actualización</h3>
-                <p id="fecha">Sin ejecutar</p>
+        <!-- KPI Cards Section -->
+        <section class="kpi-section">
+            <div class="section-header">
+                <h2>Métricas Principales</h2>
             </div>
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <h3>Total Clientes</h3>
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <p class="kpi-value" id="clientes">0</p>
+                    <p class="kpi-label">Clientes procesados</p>
+                    <div class="kpi-trend">
+                        <span class="trend-icon">↑</span>
+                        <span class="trend-text">Actualizado</span>
+                    </div>
+                </div>
 
-            <div class="card">
-                <h3>Tiempo de proceso</h3>
-                <p id="tiempo">0s</p>
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <h3>Total Polígonos</h3>
+                        <i class="fas fa-draw-polygon"></i>
+                    </div>
+                    <p class="kpi-value" id="poligonos">0</p>
+                    <p class="kpi-label">Zonas de cobertura</p>
+                    <div class="kpi-trend">
+                        <span class="trend-icon">↑</span>
+                        <span class="trend-text">Actualizado</span>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <h3>Última Actualización</h3>
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <p class="kpi-value-text" id="fecha">Sin ejecutar</p>
+                    <p class="kpi-label">Fecha y hora</p>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <h3>Tiempo de Proceso</h3>
+                        <i class="fas fa-hourglass-end"></i>
+                    </div>
+                    <p class="kpi-value" id="tiempo">0s</p>
+                    <p class="kpi-label">Tiempo total</p>
+                </div>
             </div>
-
-        </div>
+        </section>
 
         <!-- Upload Section -->
-        <div class="card">
-            <h3>Subida de archivos KMZ</h3>
-
-            <label for="clientesFile">Archivo Clientes</label>
-            <input type="file" id="clientesFile" accept=".kmz">
-
-            <label for="poligonosFile">Archivo Polígonos</label>
-            <input type="file" id="poligonosFile" accept=".kmz">
-
-            <div class="btn-group">
-                <button id="btnSubir" onclick="subirArchivos()">
-                    Subir Archivos
-                </button>
-
-                <button id="btnProcesar" onclick="actualizarDatos()">
-                    Procesar Datos
-                </button>
-
-                <button id="btnDescargar"
-                        onclick="descargarExcel()"
-                        style="display:none;">
-                    Descargar Excel
-                </button>
+        <section class="card-section">
+            <div class="section-header">
+                <h2>Carga de Datos</h2>
+                <p class="section-subtitle">Importa archivos KMZ de Google Earth</p>
             </div>
-        </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-file-upload"></i>
+                    <h3>Subida de Archivos KMZ</h3>
+                </div>
+
+                <div class="upload-container">
+                    <div class="file-input-wrapper">
+                        <label for="clientesFile" class="file-label">
+                            <i class="fas fa-map-pin"></i>
+                            <span>Archivo de Clientes</span>
+                        </label>
+                        <input type="file" id="clientesFile" accept=".kmz" class="file-input">
+                        <p class="file-hint">Selecciona el archivo KMZ con los clientes</p>
+                    </div>
+
+                    <div class="file-input-wrapper">
+                        <label for="poligonosFile" class="file-label">
+                            <i class="fas fa-draw-polygon"></i>
+                            <span>Archivo de Polígonos</span>
+                        </label>
+                        <input type="file" id="poligonosFile" accept=".kmz" class="file-input">
+                        <p class="file-hint">Selecciona el archivo KMZ con los polígonos</p>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button id="btnSubir" onclick="subirArchivos()" class="btn btn-primary">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <span>Subir Archivos</span>
+                    </button>
+
+                    <button id="btnProcesar" onclick="actualizarDatos()" class="btn btn-secondary">
+                        <i class="fas fa-play-circle"></i>
+                        <span>Procesar Datos</span>
+                    </button>
+
+                    <button id="btnDescargar" onclick="descargarExcel()" class="btn btn-success" style="display:none;">
+                        <i class="fas fa-download"></i>
+                        <span>Descargar Excel</span>
+                    </button>
+                </div>
+            </div>
+        </section>
 
         <!-- Progress Bar -->
-        <div id="progressContainer" class="progress-container" style="display:none;">
-            <div class="progress-wrapper">
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressBar"></div>
+        <div id="progressContainer" class="progress-section" style="display:none;">
+            <div class="progress-card">
+                <h4>Progreso del Proceso</h4>
+                <div class="progress-wrapper">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressBar"></div>
+                    </div>
+                    <p id="progressText" class="progress-text">Procesando... 0%</p>
                 </div>
-                <p id="progressText">Procesando... 0%</p>
             </div>
         </div>
 
         <!-- Loading Spinner -->
         <div id="loadingSpinner" class="loading-spinner" style="display:none;">
             <div class="spinner"></div>
-            <p id="spinnerText">Procesando...</p>
+            <p id="spinnerText" class="spinner-text">Procesando archivos...</p>
         </div>
 
-        <!-- Estado -->
-        <div class="card">
-            <h3>Estado del sistema</h3>
-            <div id="estado">
-                Esperando archivos...
+        <!-- Status Section -->
+        <section class="card-section">
+            <div class="section-header">
+                <h2>Estado del Sistema</h2>
             </div>
-        </div>
 
-        <!-- Historial -->
-        <div class="card">
-            <h3>Historial de procesos</h3>
-            <div id="logs"></div>
-        </div>
+            <div class="card">
+                <div class="status-content">
+                    <div class="status-icon" id="statusIcon">
+                        <i class="fas fa-hourglass-start"></i>
+                    </div>
+                    <div id="estado" class="status-message">
+                        Esperando archivos...
+                    </div>
+                </div>
+            </div>
+        </section>
 
-    </div>
+        <!-- Logs Section -->
+        <section class="card-section">
+            <div class="section-header">
+                <h2>Historial de Procesos</h2>
+                <button class="btn-icon" onclick="limpiarLogs()" title="Limpiar historial">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+
+            <div class="card">
+                <div class="logs-container" id="logs">
+                    <p class="log-empty">No hay eventos registrados aún</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2024 Zonificador PRO. Automatización de clientes y polígonos geográficos.</p>
+            <p class="footer-version">v1.0 | Sistema en línea</p>
+        </footer>
+    </main>
 
     <script src="app.js"></script>
-
 </body>
 </html>
